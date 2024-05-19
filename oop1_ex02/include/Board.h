@@ -32,7 +32,7 @@ public:
     void setInanimateLocation(const char character, vector<Location>& wanted);
     void setMouseStartLocation(const Location startLocation);
     void moveMouse(int nextMouseMove);
-    void interaction(const int character);
+    void interaction(const int character, bool& canOpenDoor);
     void setBottomRight();
     void resetMouse();
     void resetMap();

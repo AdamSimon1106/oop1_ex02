@@ -11,7 +11,7 @@ public:
     Controller();
     
     void startGame();
-    void interactionManager(Location nextLocation);
+    void interactionManager(Location nextLocation, bool& canOpenDoor);
     void loadPlaylist();
     bool stageManager();
     bool isNextMoveValid(const Location currLocation, const Location nextLocation);
