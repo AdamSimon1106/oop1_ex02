@@ -12,7 +12,7 @@ using namespace Keys;
 using namespace SpecialKeys;
 using namespace Characters;
 using namespace std::chrono_literals;
-
+using namespace Screen;
 //std::this_thread::sleep_for(200ms); // used for thread delay
 
 Controller::Controller(){
@@ -26,15 +26,15 @@ void Controller::startGame(){
      //setup Board
     while (m_currLevelIndex < m_playlist.size()){
         //-------------setup Board----------------
-        //reset map and mouse
+        //reset map and termainal
         m_board.resetMap();
+        system("cls");
         //load new data
         m_board.loadMap(m_playlist[m_currLevelIndex]);//setting m_map
         m_board.setBottomRight();
         m_board.setNumOfCheese();
         m_board.setNumOfKeys();
-        m_board.resetMouse();
-        
+        m_board.resetMouse();        
         //fill locations for all items on board.
         m_board.setInanimateLocation(CHEESE, m_board.getInanimateVector(CHEESE));
         m_board.setInanimateLocation(DOOR, m_board.getInanimateVector(DOOR));
@@ -53,35 +53,39 @@ void Controller::startGame(){
         std::this_thread::sleep_for(1s);
         //move cats, check interaction
     }
+    if (m_currLevelIndex == m_playlist.size()) {
+        system("cls");
+        cout << "You Won! retart the game to load another playlist and have some more fun!" << endl;
+    }
 
 };
-bool Controller::isNextMoveValid(const Location currLocation,const Location nextLocation){
+bool Controller::isNextMoveValid(const Location currLocation, const Location nextLocation) {
+    if (m_board.outOfBounds(nextLocation)) {
+        return false;
+    }
     switch (m_board.getCharAtLocation(nextLocation)) {
     case WALL:
         return false;
-    default: //check if out of bounds, if not then return true
-        if (m_board.outOfBounds(nextLocation)) {
-            return false;
-        }
+    default:
         return true;
     }
 }
-void Controller::interactionManager(Location nextLocation) {
+void Controller::interactionManager(Location nextLocation, bool& canOpenDoor) {
     switch (m_board.getCharAtLocation(nextLocation)) {
     case CAT:
-        m_board.interaction(CAT);
+        m_board.interaction(CAT, canOpenDoor);
         break;
     case CHEESE:
-        m_board.interaction(CHEESE);
+        m_board.interaction(CHEESE, canOpenDoor);
         break;
     case GIFT:
-        m_board.interaction(GIFT);
+        m_board.interaction(GIFT, canOpenDoor);
         break;
     case DOOR:
-        m_board.interaction(DOOR);
+        m_board.interaction(DOOR, canOpenDoor);
         break;
     case KEY:
-        m_board.interaction(KEY);
+        m_board.interaction(KEY, canOpenDoor);
         break;
     default: //case EMPTY
         break;
@@ -99,6 +103,7 @@ void Controller::loadPlaylist(){
 }
 bool Controller::stageManager() {
     while (!m_board.hasWon() && !m_board.hasLost()) {
+        resetLocation();
         m_board.printMap();
         //--------- next move -----------
         int nextMouseMove = _getch();
@@ -106,6 +111,7 @@ bool Controller::stageManager() {
 
         if (nextMouseMove == SPECIAL_KEY) {
             Location currLocation = m_board.getMouseCurrLocation();//store location
+            nextLocation = currLocation;
             nextMouseMove = _getch(); // get move 
             switch (nextMouseMove) {
             case UP:
@@ -129,7 +135,11 @@ bool Controller::stageManager() {
                 continue;
             }
             //move is valid, move and check for interactions 
-            interactionManager(nextLocation);
+            bool canOpenDoor = true;
+            interactionManager(nextLocation, canOpenDoor);
+            if (!canOpenDoor) {
+                continue;
+            }
             m_board.moveMouse(nextMouseMove);
 
         }
@@ -148,3 +158,4 @@ bool Controller::stageManager() {
     }
     return false;
 } // return true if the player finished the level successfully 
+ 

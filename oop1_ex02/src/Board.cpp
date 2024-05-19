@@ -125,7 +125,7 @@ void Board::moveMouse(int nextMouseMove)
         break;
     }
 }
-void Board::interaction(const int character) {
+void Board::interaction(const int character, bool &canOpenDoor) {
     switch (character) {
     case CHEESE:
         m_mouse.changeScore(10);
@@ -137,10 +137,12 @@ void Board::interaction(const int character) {
         //TODO - remove cat
         break;
     case DOOR:
-        if (m_mouse.getKeys() > 0) {
-            //TODO - unlock door
-            m_mouse.changeScore(2);
+        if (!(m_mouse.getKeys() > 0)) {
+            canOpenDoor = false;
+            break;
         }
+        m_mouse.changeScore(2);
+        m_mouse.changeKeys(-1);
         break;
     case KEY:
         m_mouse.changeKeys(1);
@@ -159,6 +161,7 @@ void Board::setBottomRight() {
 void Board::resetMouse() {
     m_mouse.setLocation(getMouseStartLocation());
     m_mouse.changeCheese(-m_mouse.getCheese());
+    m_mouse.changeKeys(-m_mouse.getKeys());
 }
 void Board::resetMap() {
     vector<string> temp = {};
@@ -199,7 +202,12 @@ bool Board::hasLost() const
 }
 bool Board::outOfBounds(const Location nextLocation) const
 {
-    if (nextLocation.col < 0 || nextLocation.row < 0 || nextLocation.col > getbottomRight().col-1 || nextLocation.row > m_map.size()-1){
+    if (nextLocation.col < 0 ||
+        nextLocation.row < 0 ||
+        nextLocation.col > getbottomRight().col-1 ||
+        nextLocation.row > m_map.size()-1 ||
+        nextLocation.col > m_map[nextLocation.row].size() - 1)
+    {
         return true;
     }
     return false;
